@@ -1,0 +1,28 @@
+{
+  "name": "phillip-elm/temp-workspaces",
+  "description": "Utility class for creating temporary working directories that delete themselves on destruct.",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Phillip Elm",
+      "email": "phil.elm@outlook.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "PhillipElm\\TempWorkspaces\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "PhillipElm\\TempWorkspaces\\Tests\\": "tests/"
+    }
+  },
+  "require": {
+    "php": "^7.2"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^7.4"
+  }
+}
