@@ -112,12 +112,15 @@ interface DirectoryWorkspace
     /**
      * Call file_put_contents on the give sub path.
      *
-     * @param string $subPath
-     * @param        $contents
+     * @param string                $subPath          The path within this workspace to write to
+     * @param string|array|resource $contents         The contents to write. Passed directory to file_put_contents
+     * @param bool                  $mkdir            if TRUE, will mkdir if the path does not exist. Otherwise false
+     * @param int|null              $mkdirPermissions The permissions to create with.
      *
-     * @return int|false The number of bytes written, or false on failure
+     * @return int|false
+     * @see \file_put_contents()
      */
-    public function putContents(string $subPath, $contents);
+    public function putContents(string $subPath, $contents, bool $mkdir = false, ?int $mkdirPermissions = 0777);
 
     /**
      * Call file_get_contents on the local sub path.
