@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
  * Class BaseDirectoryWorkspaceTest
  *
  * @package PhillipElm\TempWorkspaces\Tests
- * @group BaseDirectoryWorkspace
+ * @group   BaseDirectoryWorkspace
  */
 class BaseDirectoryWorkspaceTest extends TestCase
 {
@@ -44,6 +44,9 @@ class BaseDirectoryWorkspaceTest extends TestCase
 
         $this->assertEquals($workspace->putContents('test', 'test'), 4);
         $this->assertEquals($workspace->getContents('test'), 'test');
+
+        $this->assertFalse($workspace->putContents('a/b/c', 'test'));
+        $this->assertEquals($workspace->putContents('a/b/c', 'test', true), 4);
     }
 
     public function testExistenceChecks()
@@ -71,19 +74,26 @@ class BaseDirectoryWorkspaceTest extends TestCase
 
         // Make a file
         $workspace->putContents('test', 'test');
+        $workspace->putContents('sub/test', 'test', true);
 
         // Copy the file
         $this->assertTrue($workspace->copy('test', 'copied'));
+        $this->assertTrue($workspace->copy('sub', 'copiedSub'));
 
         // Ensure it exists
         $this->assertTrue($workspace->isFile('copied'));
+        $this->assertTrue($workspace->isFile('copiedSub/test'));
 
         // Move it
         $this->assertTrue($workspace->move('copied', 'moved'));
+        $this->assertTrue($workspace->move('copiedSub', 'movedSub'));
 
         // Ensure it exists under the new name and that the old one is gone
         $this->assertFalse($workspace->isFile('copied'));
         $this->assertTrue($workspace->isFile('moved'));
+
+        $this->assertFalse($workspace->isFile('copiedSub/test'));
+        $this->assertTrue($workspace->isFile('movedSub/test'));
 
         // Delete it
         $this->assertTrue($workspace->delete('moved'));
@@ -132,5 +142,28 @@ class BaseDirectoryWorkspaceTest extends TestCase
         $this->assertTrue($internal->export('test', $external->path('import'), false));
         $this->assertTrue($external->isFile('import'));
         $this->assertFalse($internal->isFile('test'));
+
+        // Directory export move
+        $internal->mkdir('a/b');
+        $internal->putContents('a/b/c', 'test');
+        $this->assertTrue($internal->export('a', $external->path('a'), false));
+        $this->assertTrue($external->isFile('a/b/c'));
+        $this->assertFalse($internal->exists('a/b'));
+
+        // Directory export copy
+        $internal->mkdir('x/y');
+        $internal->putContents('x/y/z', 'test');
+        $this->assertTrue($internal->export('x', $external->path('x'), true));
+        $this->assertTrue($external->isFile('x/y/z'));
+        $this->assertTrue($internal->exists('x/y'));
+
+        // Directory import copy/move
+        $this->assertTrue($internal->import($external->path('x'), 'copy', true));
+        $this->assertTrue($external->exists('x'));
+        $this->assertTrue($internal->exists('copy/y/z'));
+
+        $this->assertTrue($internal->import($external->path('x'), 'move', false));
+        $this->assertFalse($external->exists('x'));
+        $this->assertTrue($internal->exists('move/y/z'));
     }
 }

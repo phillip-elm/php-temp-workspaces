@@ -12,7 +12,7 @@ interface DirectoryWorkspace
     /**
      * Get the path of this directory. If a sub path is provided, it is appended.
      *
-     * @param null|string $subPath A leading slash is not required.
+     * @param string|null $subPath A leading slash is not required.
      *
      * @return string
      */

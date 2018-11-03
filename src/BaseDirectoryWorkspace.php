@@ -22,8 +22,6 @@ class BaseDirectoryWorkspace implements DirectoryWorkspace
      * WorkingDirectory constructor.
      *
      * @param string $path
-     *
-     * @throws ChangeDirectoryFailedException
      */
     protected function __construct(string $path)
     {
@@ -65,7 +63,7 @@ class BaseDirectoryWorkspace implements DirectoryWorkspace
     }
 
     /**
-     * Copy a file within this workspace. Do not use this to copy outside of the workspace.
+     * Copy a file or directory within this workspace. Do not use this to copy outside of the workspace.
      *
      * @param string $subSrc
      * @param string $subDst
@@ -74,7 +72,14 @@ class BaseDirectoryWorkspace implements DirectoryWorkspace
      */
     public function copy(string $subSrc, string $subDst): bool
     {
-        return copy($this->path($subSrc), $this->path($subDst));
+        $src = $this->path($subSrc);
+        $dst = $this->path($subDst);
+
+        if (is_dir($src)) {
+            return DirectoryUtil::copy($src, $dst);
+        } else {
+            return copy($src, $dst);
+        }
     }
 
     /**
@@ -104,7 +109,7 @@ class BaseDirectoryWorkspace implements DirectoryWorkspace
         if (is_file($path)) {
             return unlink($path);
         } elseif (is_dir($path)) {
-            return DirectoryRemover::remove($path);
+            return DirectoryUtil::remove($path);
         } else {
             return false;
         }
@@ -113,18 +118,27 @@ class BaseDirectoryWorkspace implements DirectoryWorkspace
     /**
      * Call file_put_contents on the give sub path.
      *
-     * @param string $subPath
-     * @param        $contents
+     * @param string                $subPath          The path within this workspace to write to
+     * @param string|array|resource $contents         The contents to write. Passed directory to file_put_contents
+     * @param bool                  $mkdir            if TRUE, will mkdir if the path does not exist. Otherwise false
+     * @param int|null              $mkdirPermissions The permissions to create with.
      *
      * @return int|false
+     * @see \file_put_contents()
      */
-    public function putContents(string $subPath, $contents)
+    public function putContents(string $subPath, $contents, bool $mkdir = false, ?int $mkdirPermissions = 0777)
     {
         $path    = $this->path($subPath);
         $dirName = pathinfo($path, PATHINFO_DIRNAME);
 
         if (!is_dir($dirName)) {
-            return false;
+            if ($mkdir) {
+                if (!mkdir($dirName, $mkdirPermissions, true)) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
         }
 
         return file_put_contents($this->path($subPath), $contents);
@@ -143,7 +157,7 @@ class BaseDirectoryWorkspace implements DirectoryWorkspace
     }
 
     /**
-     * Import a file into this temporary workspace
+     * Import a file or directory into this temporary workspace
      *
      * @param string $src    The source full path. MUST be on the same filesystem
      * @param string $subDst The local destination path
@@ -156,7 +170,11 @@ class BaseDirectoryWorkspace implements DirectoryWorkspace
         $dst = $this->path($subDst);
 
         if ($copy) {
-            return copy($src, $dst);
+            if (is_dir($src)) {
+                return DirectoryUtil::copy($src, $dst);
+            } else {
+                return copy($src, $dst);
+            }
         } else {
             return rename($src, $dst);
         }
@@ -176,7 +194,11 @@ class BaseDirectoryWorkspace implements DirectoryWorkspace
         $src = $this->path($subSrc);
 
         if ($copy) {
-            return copy($src, $dst);
+            if (is_dir($src)) {
+                return DirectoryUtil::copy($src, $dst);
+            } else {
+                return copy($src, $dst);
+            }
         } else {
             return rename($src, $dst);
         }
